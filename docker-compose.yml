@@ -58,12 +58,19 @@ services:
   filebeat:
     image: docker.elastic.co/beats/filebeat:${TAG}
     container_name: filebeat
-    command: -e -E 'output.elasticsearch.password=${ELASTIC_PASSWORD}'
+    # command: -e -E 'output.elasticsearch.password=${ELASTIC_PASSWORD}'
+    command: -e -E output.elasticsearch.username=elastic -E output.elasticsearch.password=changeme -strict.perms=false
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./config/filebeat.yml:/usr/share/filebeat/filebeat.yml
     # If the host system has logs at "/var/log", mount them at "/mnt/log"
     # inside the container, where Filebeat can find them.
     # volumes: ['/var/log:/mnt/log:ro']
+    user: root  # temporary fix for filebeat not having access to docker.sock
     networks: ['stack']
     depends_on: ['elasticsearch', 'setup_filebeat']
+
 
   heartbeat:
     image: docker.elastic.co/beats/heartbeat:${TAG}
